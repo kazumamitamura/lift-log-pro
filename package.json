@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.91.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.562.0",
+    "recharts": "^3.6.0",
+    "tailwind-merge": "^3.4.0"
+  }
+}
