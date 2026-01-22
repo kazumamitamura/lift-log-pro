@@ -81,79 +81,35 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               }
               return <ChevronRight className="h-4 w-4" />
             },
-            Day: (props) => {
-              try {
-                // CalendarDayからDateを取得
-                const day = props.day as unknown as Date
-                
-                // 無効な日付のチェック
-                if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-                  return <div className="h-16 w-14 flex items-center justify-center" />
-                }
-                
-                const dateStr = format(day, "yyyy-MM-dd")
-                const log = workoutLogs.get(dateStr)
-                const isSelected =
-                  selected && format(selected, "yyyy-MM-dd") === dateStr
-                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
-                const tonnage = log?.total_tonnage
-
-                return (
-                  <button
-                    type="button"
-                    className={cn(
-                      "h-16 w-14 rounded-lg text-sm transition-all flex flex-col items-center justify-center gap-0.5 relative",
-                      "hover:shadow-md hover:scale-105 active:scale-95",
-                      isSelected && "bg-primary text-primary-foreground shadow-lg scale-105 font-bold",
-                      !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold",
-                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-semibold border-2 border-primary/30",
-                      !isSelected && !isToday && !log && "hover:bg-accent"
-                    )}
-                    onClick={() => handleSelect(day)}
-                  >
-                    <span className={cn(
-                      "text-base leading-none",
-                      isSelected && "font-bold",
-                      isToday && !isSelected && "font-bold"
-                    )}>
-                      {format(day, "d")}
-                    </span>
-                    {tonnage != null && tonnage > 0 && (
-                      <span className={cn(
-                        "text-[10px] font-bold leading-tight px-1 py-0.5 rounded whitespace-nowrap",
-                        isSelected 
-                          ? "bg-primary-foreground/20 text-primary-foreground" 
-                          : "bg-primary text-primary-foreground"
-                      )}>
-                        {Math.round(tonnage)}kg
-                      </span>
-                    )}
-                  </button>
-                )
-              } catch (error) {
-                console.error("Error rendering day:", error, props.day)
-                // エラー時はデフォルトの日付表示を試みる
-                try {
-                  const day = props.day as unknown as Date
-                  if (day && day instanceof Date && !isNaN(day.getTime())) {
-                    return (
-                      <button
-                        type="button"
-                        className="h-16 w-14 rounded-lg text-sm flex items-center justify-center hover:bg-accent font-medium"
-                        onClick={() => handleSelect(day)}
-                      >
-                        {format(day, "d")}
-                      </button>
-                    )
-                  }
-                } catch {
-                  // フォールバック
-                }
-                return <div className="h-16 w-14 flex items-center justify-center" />
-              }
-            },
           }}
         />
+        {/* 練習日の総重量を表示するリスト */}
+        {workoutLogs.size > 0 && (
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+            <h3 className="text-sm font-semibold mb-2">練習記録</h3>
+            <div className="space-y-1">
+              {Array.from(workoutLogs.entries())
+                .slice(0, 5)
+                .map(([dateStr, log]) => {
+                  const date = new Date(dateStr)
+                  const tonnage = log?.total_tonnage
+                  return (
+                    <div
+                      key={dateStr}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span>{format(date, "yyyy年M月d日")}</span>
+                      {tonnage != null && tonnage > 0 && (
+                        <span className="font-bold text-primary">
+                          {Math.round(tonnage)}kg
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
