@@ -151,3 +151,54 @@ export async function saveWorkoutLog(
 
   return logData
 }
+
+// ログを削除（セットも含む）
+export async function deleteWorkoutLog(date: string) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error("User not authenticated")
+  }
+
+  // まずログを取得
+  const { data: logData, error: logError } = await supabase
+    .from("lift_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("date", date)
+    .single()
+
+  if (logError) {
+    throw logError
+  }
+
+  if (!logData) {
+    throw new Error("Workout log not found")
+  }
+
+  // セットを削除（CASCADEで自動削除されるが、明示的に削除）
+  const { error: setsError } = await supabase
+    .from("lift_sets")
+    .delete()
+    .eq("log_id", logData.id)
+
+  if (setsError) {
+    console.error("Error deleting sets:", setsError)
+    // セットの削除エラーは無視して続行
+  }
+
+  // ログを削除
+  const { error: deleteError } = await supabase
+    .from("lift_logs")
+    .delete()
+    .eq("id", logData.id)
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  return true
+}

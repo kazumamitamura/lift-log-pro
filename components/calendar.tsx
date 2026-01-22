@@ -84,7 +84,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
           }}
         />
         {/* 練習日の総重量を表示するリスト */}
-        {workoutLogs.size > 0 && (
+        {workoutLogs && workoutLogs.size > 0 && (
           <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
             <h3 className="text-sm font-semibold mb-3 text-foreground">練習記録一覧</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -92,27 +92,34 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                 .sort(([a], [b]) => b.localeCompare(a))
                 .slice(0, 10)
                 .map(([dateStr, log]) => {
-                  const date = new Date(dateStr + "T00:00:00")
-                  const tonnage = log?.total_tonnage
-                  return (
-                    <div
-                      key={dateStr}
-                      className="flex justify-between items-center text-sm p-2 hover:bg-accent/50 rounded transition-colors cursor-pointer"
-                      onClick={() => {
-                        handleSelect(date)
-                        onDateSelect(date)
-                      }}
-                    >
-                      <span className="font-medium">
-                        {format(date, "yyyy年M月d日(E)", { locale: ja })}
-                      </span>
-                      {tonnage != null && tonnage > 0 && (
-                        <span className="font-bold text-primary px-2 py-1 bg-primary/10 rounded">
-                          {Math.round(tonnage)}kg
+                  if (!log) return null
+                  try {
+                    const date = new Date(dateStr + "T00:00:00")
+                    if (isNaN(date.getTime())) return null
+                    const tonnage = log?.total_tonnage
+                    return (
+                      <div
+                        key={dateStr}
+                        className="flex justify-between items-center text-sm p-2 hover:bg-accent/50 rounded transition-colors cursor-pointer"
+                        onClick={() => {
+                          handleSelect(date)
+                          onDateSelect(date)
+                        }}
+                      >
+                        <span className="font-medium">
+                          {format(date, "yyyy年M月d日(E)", { locale: ja })}
                         </span>
-                      )}
-                    </div>
-                  )
+                        {tonnage != null && tonnage > 0 && (
+                          <span className="font-bold text-primary px-2 py-1 bg-primary/10 rounded">
+                            {Math.round(tonnage)}kg
+                          </span>
+                        )}
+                      </div>
+                    )
+                  } catch (error) {
+                    console.error("Error rendering workout log item:", error)
+                    return null
+                  }
                 })}
             </div>
           </div>

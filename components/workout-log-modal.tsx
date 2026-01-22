@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Plus, Trash2, X, Upload } from "lucide-react"
-import { saveWorkoutLog } from "@/lib/supabase/workouts"
+import { saveWorkoutLog, deleteWorkoutLog } from "@/lib/supabase/workouts"
 import { getExercisesByCategoryClient } from "@/lib/supabase/exercises-client"
 import { NutritionAnalysis } from "@/components/nutrition-analysis"
 import { getBodyPartFromExercise } from "@/lib/utils/exercise-utils"
@@ -53,6 +53,7 @@ export function WorkoutLogModal({
   onClose,
   selectedDate,
   existingLog,
+  onDelete,
 }: WorkoutLogModalProps) {
   const { toast } = useToast()
   const [timeZone, setTimeZone] = useState<string>("")
@@ -509,21 +510,43 @@ export function WorkoutLogModal({
             onNutritionSummaryChange={setNutritionSummary}
           />
 
-          {/* 保存ボタン */}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              キャンセル
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  保存中...
-                </>
-              ) : (
-                "保存"
-              )}
-            </Button>
+          {/* 保存・削除ボタン */}
+          <div className="flex justify-between items-center gap-2 pt-4 border-t">
+            {existingLog && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isSaving || isDeleting}
+                size="sm"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    削除中...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    削除
+                  </>
+                )}
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={onClose} disabled={isSaving || isDeleting}>
+                キャンセル
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving || isDeleting}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  "保存"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

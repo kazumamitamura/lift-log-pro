@@ -132,7 +132,11 @@ export default function DashboardPage() {
   const handleModalClose = () => {
     setIsModalOpen(false)
     setSelectedLog(null)
-    // ログを再取得
+    reloadWorkoutLogs()
+  }
+
+  // ログを再取得する関数
+  const reloadWorkoutLogs = () => {
     const today = new Date()
     const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
@@ -143,9 +147,13 @@ export default function DashboardPage() {
     )
       .then((logs) => {
         const logsMap = new Map<string, WorkoutLogWithSets>()
-        logs.forEach((log) => {
-          logsMap.set(log.date, log)
-        })
+        if (logs && Array.isArray(logs)) {
+          logs.forEach((log) => {
+            if (log && log.date) {
+              logsMap.set(log.date, log)
+            }
+          })
+        }
         setWorkoutLogs(logsMap)
       })
       .catch((error) => {
@@ -214,6 +222,7 @@ export default function DashboardPage() {
         onClose={handleModalClose}
         selectedDate={selectedDate}
         existingLog={selectedLog}
+        onDelete={reloadWorkoutLogs}
       />
     </div>
   )
