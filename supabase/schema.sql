@@ -83,15 +83,13 @@ CREATE INDEX IF NOT EXISTS idx_lift_exercises_category ON public.lift_exercises(
 -- ============================================
 
 -- 現在のユーザーがこのアプリ（lift-log-pro）のユーザーかどうかを判定
+-- 注意: lift_profilesテーブルを参照しない（無限再帰を回避）
 CREATE OR REPLACE FUNCTION public.is_lift_log_user()
 RETURNS BOOLEAN AS $$
 BEGIN
+    -- メタデータからapp_nameを確認（lift_profilesを参照しない）
     RETURN (
         (auth.jwt() ->> 'user_metadata')::jsonb->>'app_name' = 'lift-log-pro'
-        OR EXISTS (
-            SELECT 1 FROM public.lift_profiles
-            WHERE id = auth.uid()
-        )
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
@@ -146,9 +144,14 @@ CREATE POLICY "lift_admins_can_view_all_profiles"
     ON public.lift_profiles FOR SELECT
     USING (
         public.is_lift_log_user()
-        AND EXISTS (
-            SELECT 1 FROM public.lift_profiles
-            WHERE id = auth.uid() AND role = 'admin'
+        AND (
+            -- 管理者は自分のプロファイルを確認してroleをチェック
+            -- 無限再帰を避けるため、直接auth.uid()と比較
+            EXISTS (
+                SELECT 1 FROM public.lift_profiles p
+                WHERE p.id = auth.uid() AND p.role = 'admin'
+            )
+            OR id = auth.uid()
         )
     );
 
@@ -217,9 +220,13 @@ CREATE POLICY "lift_admins_can_view_all_logs"
     ON public.lift_logs FOR SELECT
     USING (
         public.is_lift_log_user()
-        AND EXISTS (
-            SELECT 1 FROM public.lift_profiles
-            WHERE id = auth.uid() AND role = 'admin'
+        AND (
+            -- 管理者チェック（無限再帰を避けるため、直接比較）
+            EXISTS (
+                SELECT 1 FROM public.lift_profiles p
+                WHERE p.id = auth.uid() AND p.role = 'admin'
+            )
+            OR user_id = auth.uid()
         )
     );
 
