@@ -66,6 +66,7 @@ export function WorkoutLogModal({
   >({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [selectedMajorCategory, setSelectedMajorCategory] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -280,6 +281,42 @@ export function WorkoutLogModal({
 
   // 総重量計算
   const totalTonnage = workoutSets.reduce((sum, set) => sum + set.tonnage, 0)
+
+  // 削除処理
+  const handleDelete = async () => {
+    if (!selectedDate || !existingLog) {
+      return
+    }
+
+    if (!confirm("この練習記録を削除しますか？この操作は取り消せません。")) {
+      return
+    }
+
+    setIsDeleting(true)
+
+    try {
+      const dateStr = format(selectedDate, "yyyy-MM-dd")
+      await deleteWorkoutLog(dateStr)
+
+      toast({
+        title: "削除しました",
+        description: "練習記録を削除しました",
+      })
+
+      if (onDelete) {
+        onDelete()
+      }
+      onClose()
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "削除に失敗しました",
+        description: error.message || "もう一度お試しください",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
