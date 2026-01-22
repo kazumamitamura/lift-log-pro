@@ -20,7 +20,11 @@ export default function DashboardPage() {
   const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    // サーバーサイドレンダリング時のエラーを防ぐ
+    if (typeof window === "undefined") return undefined
+    return new Date()
+  })
   const [workoutLogs, setWorkoutLogs] = useState<Map<string, WorkoutLogWithSets>>(new Map())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLog, setSelectedLog] = useState<WorkoutLogWithSets | null>(null)

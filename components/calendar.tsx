@@ -72,32 +72,43 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
           Day: (props) => {
             // CalendarDayからDateを取得（型アサーションを使用）
             const day = props.day as unknown as Date
-            const dateStr = format(day, "yyyy-MM-dd")
-            const log = workoutLogs.get(dateStr)
-            const isSelected =
-              selected && format(selected, "yyyy-MM-dd") === dateStr
-            const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
+            
+            // 無効な日付のチェック
+            if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+              return null
+            }
+            
+            try {
+              const dateStr = format(day, "yyyy-MM-dd")
+              const log = workoutLogs.get(dateStr)
+              const isSelected =
+                selected && format(selected, "yyyy-MM-dd") === dateStr
+              const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
 
-            return (
-              <button
-                type="button"
-                className={cn(
-                  "h-9 w-9 rounded-md text-sm transition-colors flex flex-col items-center justify-center",
-                  isSelected && "bg-primary text-primary-foreground",
-                  !isSelected && isToday && "bg-accent",
-                  !isSelected && !isToday && log && "hover:bg-accent font-semibold",
-                  !isSelected && !isToday && !log && "hover:bg-accent"
-                )}
-                onClick={() => handleSelect(day)}
-              >
-                <span>{format(day, "d")}</span>
-                {log && log.total_tonnage != null && (
-                  <span className="text-[10px] font-bold text-primary leading-none">
-                    {Math.round(log.total_tonnage)}
-                  </span>
-                )}
-              </button>
-            )
+              return (
+                <button
+                  type="button"
+                  className={cn(
+                    "h-9 w-9 rounded-md text-sm transition-colors flex flex-col items-center justify-center",
+                    isSelected && "bg-primary text-primary-foreground",
+                    !isSelected && isToday && "bg-accent",
+                    !isSelected && !isToday && log && "hover:bg-accent font-semibold",
+                    !isSelected && !isToday && !log && "hover:bg-accent"
+                  )}
+                  onClick={() => handleSelect(day)}
+                >
+                  <span>{format(day, "d")}</span>
+                  {log && log.total_tonnage != null && (
+                    <span className="text-[10px] font-bold text-primary leading-none">
+                      {Math.round(log.total_tonnage)}
+                    </span>
+                  )}
+                </button>
+              )
+            } catch (error) {
+              console.error("Error rendering day:", error, day)
+              return null
+            }
           },
         }}
       />
