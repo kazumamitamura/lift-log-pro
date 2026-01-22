@@ -85,7 +85,14 @@ export default function DashboardPage() {
 
   // 日付選択時の処理
   const handleDateSelect = async (date: Date | undefined) => {
-    if (!date) return
+    if (!date) {
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: "日付が選択されていません",
+      })
+      return
+    }
 
     setSelectedDate(date)
     const dateStr = format(date, "yyyy-MM-dd")
@@ -95,8 +102,12 @@ export default function DashboardPage() {
       const existingLog = workoutLogs.get(dateStr)
       if (existingLog) {
         setSelectedLog(existingLog)
-      } else {
-        // データベースから取得を試みる
+        setIsModalOpen(true)
+        return
+      }
+
+      // データベースから取得を試みる（エラーを無視して続行）
+      try {
         const log = await getWorkoutLogByDate(dateStr)
         if (log) {
           setWorkoutLogs((prev) => {
@@ -108,15 +119,19 @@ export default function DashboardPage() {
         } else {
           setSelectedLog(null)
         }
+      } catch (fetchError) {
+        // データ取得エラーは無視して、新規作成として続行
+        console.warn("Error fetching workout log:", fetchError)
+        setSelectedLog(null)
       }
 
       setIsModalOpen(true)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error selecting date:", error)
       toast({
         variant: "destructive",
         title: "エラー",
-        description: "日付の選択に失敗しました",
+        description: error.message || "日付の選択に失敗しました。もう一度お試しください。",
       })
     }
   }
