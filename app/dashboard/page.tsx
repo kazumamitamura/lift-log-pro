@@ -86,11 +86,6 @@ export default function DashboardPage() {
   // 日付選択時の処理
   const handleDateSelect = async (date: Date | undefined) => {
     if (!date) {
-      toast({
-        variant: "destructive",
-        title: "エラー",
-        description: "日付が選択されていません",
-      })
       return
     }
 
@@ -102,37 +97,34 @@ export default function DashboardPage() {
       const existingLog = workoutLogs.get(dateStr)
       if (existingLog) {
         setSelectedLog(existingLog)
-        setIsModalOpen(true)
-        return
-      }
-
-      // データベースから取得を試みる（エラーを無視して続行）
-      try {
-        const log = await getWorkoutLogByDate(dateStr)
-        if (log) {
-          setWorkoutLogs((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(dateStr, log)
-            return newMap
-          })
-          setSelectedLog(log)
-        } else {
+      } else {
+        // データベースから取得を試みる
+        try {
+          const log = await getWorkoutLogByDate(dateStr)
+          if (log) {
+            setWorkoutLogs((prev) => {
+              const newMap = new Map(prev)
+              newMap.set(dateStr, log)
+              return newMap
+            })
+            setSelectedLog(log)
+          } else {
+            setSelectedLog(null)
+          }
+        } catch (fetchError) {
+          // データ取得エラーは無視して、新規作成として続行
+          console.warn("Error fetching workout log:", fetchError)
           setSelectedLog(null)
         }
-      } catch (fetchError) {
-        // データ取得エラーは無視して、新規作成として続行
-        console.warn("Error fetching workout log:", fetchError)
-        setSelectedLog(null)
       }
 
+      // モーダルを開く
       setIsModalOpen(true)
     } catch (error: any) {
       console.error("Error selecting date:", error)
-      toast({
-        variant: "destructive",
-        title: "エラー",
-        description: error.message || "日付の選択に失敗しました。もう一度お試しください。",
-      })
+      // エラーが発生してもモーダルは開く（新規作成として）
+      setSelectedLog(null)
+      setIsModalOpen(true)
     }
   }
 

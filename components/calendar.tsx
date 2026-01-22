@@ -7,7 +7,6 @@ import { ja } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { WorkoutLogWithSets } from "@/lib/supabase/workouts"
-import type { DayProps } from "react-day-picker"
 import "react-day-picker/dist/style.css"
 
 interface CalendarProps {
@@ -21,71 +20,6 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
   const handleSelect = (date: Date | undefined) => {
     setSelected(date)
     onDateSelect(date)
-  }
-
-  // カスタムDayコンポーネント
-  function CustomDay(props: DayProps) {
-    const { day, modifiers } = props
-    
-    // dayをDateに変換
-    let date: Date | null = null
-    try {
-      if (day instanceof Date) {
-        date = day
-      } else if (typeof day === "string") {
-        date = new Date(day)
-      } else if (day && typeof day === "object" && "getTime" in day) {
-        // unknownを経由してキャスト
-        date = day as unknown as Date
-      }
-      
-      if (!date || isNaN(date.getTime())) {
-        return <div className="h-20 w-16" />
-      }
-    } catch {
-      return <div className="h-20 w-16" />
-    }
-
-    const dateStr = format(date, "yyyy-MM-dd")
-    const log = workoutLogs.get(dateStr)
-    const isSelected = selected && format(selected, "yyyy-MM-dd") === dateStr
-    const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
-    const tonnage = log?.total_tonnage
-    const hasWorkout = modifiers?.hasWorkout || false
-
-    return (
-      <button
-        type="button"
-        className={cn(
-          "h-20 w-16 rounded-xl text-sm transition-all flex flex-col items-center justify-center gap-1 relative",
-          "hover:shadow-lg hover:scale-110 active:scale-105",
-          isSelected && "bg-primary text-primary-foreground shadow-xl scale-110 font-bold ring-2 ring-primary ring-offset-2",
-          !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold shadow-md",
-          !isSelected && !isToday && hasWorkout && "bg-primary/20 hover:bg-primary/30 font-bold border-2 border-primary/60 shadow-md",
-          !isSelected && !isToday && !hasWorkout && "hover:bg-accent/50"
-        )}
-        onClick={() => handleSelect(date)}
-      >
-        <span className={cn(
-          "text-lg leading-none font-bold",
-          isSelected && "text-primary-foreground",
-          isToday && !isSelected && "text-accent-foreground",
-          hasWorkout && !isSelected && !isToday && "text-primary"
-        )}>
-          {format(date, "d")}
-        </span>
-        {tonnage != null && tonnage > 0 && (
-          <span className={cn(
-            "text-[10px] font-extrabold leading-tight px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-sm",
-            isSelected 
-              ? "bg-primary-foreground/30 text-primary-foreground border border-primary-foreground/50" 
-              : "bg-primary text-primary-foreground border border-primary/80"
-          )}>
-            {Math.round(tonnage)}kg
-          </span>
-        )}
-      </button>
-    )
   }
 
   return (
@@ -147,9 +81,42 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               }
               return <ChevronRight className="h-5 w-5" />
             },
-            Day: CustomDay,
           }}
         />
+        {/* 練習日の総重量を表示するリスト */}
+        {workoutLogs.size > 0 && (
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
+            <h3 className="text-sm font-semibold mb-3 text-foreground">練習記録一覧</h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {Array.from(workoutLogs.entries())
+                .sort(([a], [b]) => b.localeCompare(a))
+                .slice(0, 10)
+                .map(([dateStr, log]) => {
+                  const date = new Date(dateStr + "T00:00:00")
+                  const tonnage = log?.total_tonnage
+                  return (
+                    <div
+                      key={dateStr}
+                      className="flex justify-between items-center text-sm p-2 hover:bg-accent/50 rounded transition-colors cursor-pointer"
+                      onClick={() => {
+                        handleSelect(date)
+                        onDateSelect(date)
+                      }}
+                    >
+                      <span className="font-medium">
+                        {format(date, "yyyy年M月d日(E)", { locale: ja })}
+                      </span>
+                      {tonnage != null && tonnage > 0 && (
+                        <span className="font-bold text-primary px-2 py-1 bg-primary/10 rounded">
+                          {Math.round(tonnage)}kg
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
