@@ -69,8 +69,8 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
           hasWorkout: "bg-primary/20 font-semibold",
         }}
         components={{
-          Day: ({ date }) => {
-            const dateStr = format(date, "yyyy-MM-dd")
+          Day: ({ day }) => {
+            const dateStr = format(day, "yyyy-MM-dd")
             const log = workoutLogs.get(dateStr)
             const isSelected =
               selected && format(selected, "yyyy-MM-dd") === dateStr
@@ -86,9 +86,9 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                   !isSelected && !isToday && log && "hover:bg-accent font-semibold",
                   !isSelected && !isToday && !log && "hover:bg-accent"
                 )}
-                onClick={() => handleSelect(date)}
+                onClick={() => handleSelect(day)}
               >
-                <span>{format(date, "d")}</span>
+                <span>{format(day, "d")}</span>
                 {log && (
                   <span className="text-[10px] font-bold text-primary leading-none">
                     {Math.round(log.total_tonnage)}
