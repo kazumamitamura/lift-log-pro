@@ -25,7 +25,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
 
   // カスタムDayコンポーネント
   function CustomDay(props: DayProps) {
-    const { day, modifiers, ...rest } = props
+    const { day, modifiers } = props
     
     // dayをDateに変換
     let date: Date | null = null
@@ -56,7 +56,6 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
     return (
       <button
         type="button"
-        {...rest}
         className={cn(
           "h-20 w-16 rounded-xl text-sm transition-all flex flex-col items-center justify-center gap-1 relative",
           "hover:shadow-lg hover:scale-110 active:scale-105",
