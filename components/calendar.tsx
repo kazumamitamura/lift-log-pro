@@ -72,7 +72,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
             },
           }}
           modifiersClassNames={{
-            hasWorkout: "bg-primary/30 border-primary/50 font-semibold",
+            hasWorkout: "bg-primary/30 border border-primary/50 font-semibold",
           }}
           components={{
             Chevron: ({ orientation }) => {
@@ -81,59 +81,24 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               }
               return <ChevronRight className="h-4 w-4" />
             },
-            Day: (props) => {
-              // CalendarDayからDateを取得（型アサーションを使用）
-              const day = props.day as unknown as Date
+          }}
+          formatters={{
+            formatDay: (date) => {
+              const dateStr = format(date, "yyyy-MM-dd")
+              const log = workoutLogs.get(dateStr)
+              const dayNumber = format(date, "d")
               
-              // 無効な日付のチェック
-              if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-                return <div className="h-14 w-12" />
-              }
-              
-              try {
-                const dateStr = format(day, "yyyy-MM-dd")
-                const log = workoutLogs.get(dateStr)
-                const isSelected =
-                  selected && format(selected, "yyyy-MM-dd") === dateStr
-                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
-                const tonnage = log?.total_tonnage
-
+              if (log && log.total_tonnage != null && log.total_tonnage > 0) {
                 return (
-                  <button
-                    type="button"
-                    className={cn(
-                      "h-14 w-12 rounded-lg text-sm transition-all flex flex-col items-center justify-center gap-0.5 relative",
-                      "hover:shadow-md hover:scale-105 active:scale-95",
-                      isSelected && "bg-primary text-primary-foreground shadow-lg scale-105 font-bold",
-                      !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold",
-                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-semibold border border-primary/30",
-                      !isSelected && !isToday && !log && "hover:bg-accent"
-                    )}
-                    onClick={() => handleSelect(day)}
-                  >
-                    <span className={cn(
-                      "text-base",
-                      isSelected && "font-bold",
-                      isToday && !isSelected && "font-bold"
-                    )}>
-                      {format(day, "d")}
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span>{dayNumber}</span>
+                    <span className="text-[9px] font-bold leading-tight text-primary">
+                      {Math.round(log.total_tonnage)}kg
                     </span>
-                    {tonnage != null && tonnage > 0 && (
-                      <span className={cn(
-                        "text-[9px] font-bold leading-tight px-1 py-0.5 rounded",
-                        isSelected 
-                          ? "bg-primary-foreground/20 text-primary-foreground" 
-                          : "bg-primary/80 text-primary-foreground"
-                      )}>
-                        {Math.round(tonnage)}kg
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 )
-              } catch (error) {
-                console.error("Error rendering day:", error, day)
-                return <div className="h-14 w-12" />
               }
+              return dayNumber
             },
           }}
         />
