@@ -46,6 +46,7 @@ interface WorkoutLogModalProps {
   onClose: () => void
   selectedDate: Date | undefined
   existingLog: WorkoutLogWithSets | null
+  onDelete?: () => void
 }
 
 export function WorkoutLogModal({
