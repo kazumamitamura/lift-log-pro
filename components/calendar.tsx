@@ -35,7 +35,8 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
       } else if (typeof day === "string") {
         date = new Date(day)
       } else if (day && typeof day === "object" && "getTime" in day) {
-        date = day as Date
+        // unknownを経由してキャスト
+        date = day as unknown as Date
       }
       
       if (!date || isNaN(date.getTime())) {
