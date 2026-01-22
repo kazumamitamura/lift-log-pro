@@ -138,7 +138,14 @@ export default function AnalysisPage() {
   const bodyPartData = (() => {
     const bodyPartMap: Record<string, number> = {}
 
+    if (!workoutLogs || !Array.isArray(workoutLogs)) {
+      return []
+    }
+
     workoutLogs.forEach((log) => {
+      if (!log || !log.sets || !Array.isArray(log.sets)) {
+        return
+      }
       log.sets.forEach((set) => {
         // target_body_partがnullの場合は種目名から推定
         let bodyPart = set.target_body_part
@@ -187,9 +194,9 @@ export default function AnalysisPage() {
   ]
 
   // 総重量の推移
-  const tonnageTrend = workoutLogs.map((log) => ({
+  const tonnageTrend = (workoutLogs && Array.isArray(workoutLogs) ? workoutLogs : []).map((log) => ({
     date: format(parseISO(log.date), "M/d", { locale: ja }),
-    tonnage: Math.round(log.total_tonnage),
+    tonnage: Math.round(log.total_tonnage || 0),
   }))
 
   // Excel出力
@@ -289,25 +296,28 @@ export default function AnalysisPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl p-4 py-8">
-      <div className="mb-6">
-        <Link href="/dashboard">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            ダッシュボードに戻る
-          </Button>
-        </Link>
+    <div className="container mx-auto max-w-7xl p-3 sm:p-4 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="w-full sm:w-auto"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          戻る
+        </Button>
       </div>
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">データ分析</h1>
-          <p className="text-muted-foreground">トレーニングデータの可視化</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">データ分析</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">トレーニングデータの可視化</p>
         </div>
-        <div className="flex gap-2">
-          {isAdmin && (
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {isAdmin && users && Array.isArray(users) && users.length > 0 && (
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="ユーザーを選択" />
               </SelectTrigger>
               <SelectContent>
@@ -320,7 +330,7 @@ export default function AnalysisPage() {
             </Select>
           )}
           <Select value={dateRange} onValueChange={(v: any) => setDateRange(v)}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -329,7 +339,7 @@ export default function AnalysisPage() {
               <SelectItem value="all">全期間</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleExportExcel} disabled={isExporting}>
+          <Button onClick={handleExportExcel} disabled={isExporting} className="w-full sm:w-auto">
             {isExporting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -345,16 +355,16 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         {/* 部位別トレーニング割合 */}
         <Card>
           <CardHeader>
-            <CardTitle>部位別トレーニング割合</CardTitle>
-            <CardDescription>総重量での割合</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">部位別トレーニング割合</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">総重量での割合</CardDescription>
           </CardHeader>
           <CardContent>
-            {bodyPartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+            {bodyPartData && Array.isArray(bodyPartData) && bodyPartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <PieChart>
                   <Pie
                     data={bodyPartData}
@@ -364,7 +374,8 @@ export default function AnalysisPage() {
                     label={({ name, percent }) =>
                       `${name} ${((percent || 0) * 100).toFixed(0)}%`
                     }
-                    outerRadius={100}
+                    outerRadius={80}
+                    className="sm:outerRadius={100}"
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -380,7 +391,7 @@ export default function AnalysisPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+              <div className="flex h-[250px] sm:h-[300px] items-center justify-center text-muted-foreground text-sm">
                 データがありません
               </div>
             )}
@@ -390,12 +401,12 @@ export default function AnalysisPage() {
         {/* 総重量の推移 */}
         <Card>
           <CardHeader>
-            <CardTitle>総重量の推移</CardTitle>
-            <CardDescription>日別の総挙上重量</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">総重量の推移</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">日別の総挙上重量</CardDescription>
           </CardHeader>
           <CardContent>
-            {tonnageTrend.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+            {tonnageTrend && Array.isArray(tonnageTrend) && tonnageTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <LineChart data={tonnageTrend}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
@@ -412,7 +423,7 @@ export default function AnalysisPage() {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+              <div className="flex h-[250px] sm:h-[300px] items-center justify-center text-muted-foreground text-sm">
                 データがありません
               </div>
             )}

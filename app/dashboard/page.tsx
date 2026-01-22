@@ -167,24 +167,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl p-4 py-8">
+    <div className="container mx-auto max-w-7xl p-3 sm:p-4 py-4 sm:py-8">
       {/* ヘッダー */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">ダッシュボード</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">ダッシュボード</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {format(new Date(), "yyyy年M月d日", { locale: ja })}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/pb">
-            <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Link href="/pb" className="w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <User className="mr-2 h-4 w-4" />
               自己ベスト
             </Button>
           </Link>
-          <Link href="/analysis">
-            <Button variant="outline" size="sm">
+          <Link href="/analysis" className="w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <BarChart3 className="mr-2 h-4 w-4" />
               分析
             </Button>

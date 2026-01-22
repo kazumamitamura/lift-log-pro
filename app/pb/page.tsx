@@ -54,24 +54,33 @@ export default function PersonalBestPage() {
       setIsLoading(true)
 
       // 既存のデータを読み込む
-      const { data, error } = await supabase
-        .from("lift_personal_bests")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("grade", selectedGrade)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from("lift_personal_bests")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("grade", selectedGrade)
+          .single()
 
-      if (data && !error) {
-        setBodyWeight(data.body_weight?.toString() || "")
-        // JSONBから数値を文字列に変換
-        const recordsObj = (data.records as Record<string, number>) || {}
-        const recordsStr: Record<string, string> = {}
-        Object.entries(recordsObj).forEach(([key, value]) => {
-          recordsStr[key] = value.toString()
-        })
-        setRecords(recordsStr)
-      } else {
-        // データがない場合は空にする
+        if (data && !error) {
+          setBodyWeight(data.body_weight?.toString() || "")
+          // JSONBから数値を文字列に変換
+          const recordsObj = (data.records as Record<string, number>) || {}
+          const recordsStr: Record<string, string> = {}
+          if (recordsObj && typeof recordsObj === "object") {
+            Object.entries(recordsObj).forEach(([key, value]) => {
+              recordsStr[key] = value.toString()
+            })
+          }
+          setRecords(recordsStr)
+        } else {
+          // データがない場合は空にする
+          setBodyWeight("")
+          setRecords({})
+        }
+      } catch (err) {
+        console.error("Error loading personal bests:", err)
+        // エラー時も空にする
         setBodyWeight("")
         setRecords({})
       }
@@ -156,14 +165,17 @@ export default function PersonalBestPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 py-8">
+    <div className="container mx-auto max-w-4xl p-3 sm:p-4 py-4 sm:py-8">
       <div className="mb-4">
-        <Link href="/dashboard">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            ダッシュボードに戻る
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="w-full sm:w-auto"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          戻る
+        </Button>
       </div>
 
       <Card>
@@ -204,24 +216,30 @@ export default function PersonalBestPage() {
                   {/* 種目入力グリッド */}
                   <div className="space-y-4">
                     <Label>種目別ベスト記録 (kg)</Label>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                      {WL_EXERCISES.map((exercise) => (
-                        <div key={exercise} className="space-y-2">
-                          <Label htmlFor={`exercise-${exercise}`} className="text-sm">
-                            {exercise}
-                          </Label>
-                          <Input
-                            id={`exercise-${exercise}`}
-                            type="number"
-                            step="0.5"
-                            placeholder="0"
-                            value={records[exercise] || ""}
-                            onChange={(e) => handleRecordChange(exercise, e.target.value)}
-                            className="text-lg font-semibold"
-                            tabIndex={0}
-                          />
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
+                      {WL_EXERCISES && Array.isArray(WL_EXERCISES) && WL_EXERCISES.length > 0 ? (
+                        WL_EXERCISES.map((exercise) => (
+                          <div key={exercise} className="space-y-2">
+                            <Label htmlFor={`exercise-${exercise}`} className="text-xs sm:text-sm">
+                              {exercise}
+                            </Label>
+                            <Input
+                              id={`exercise-${exercise}`}
+                              type="number"
+                              step="0.5"
+                              placeholder="0"
+                              value={records[exercise] || ""}
+                              onChange={(e) => handleRecordChange(exercise, e.target.value)}
+                              className="text-base sm:text-lg font-semibold"
+                              tabIndex={0}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 sm:col-span-3 md:col-span-4 text-muted-foreground text-sm">
+                          種目データを読み込めませんでした
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
