@@ -94,6 +94,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
+-- 管理者チェック関数（lift_profilesを参照しない）
+CREATE OR REPLACE FUNCTION public.is_lift_log_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- メールアドレスで直接チェック（lift_profilesを参照しない）
+    RETURN (
+        (auth.jwt() ->> 'email')::text = 'mitamuraka@haguroko.ed.jp'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
 -- ============================================
 -- RLS (Row Level Security) 設定
 -- ============================================
@@ -145,12 +156,8 @@ CREATE POLICY "lift_admins_can_view_all_profiles"
     USING (
         public.is_lift_log_user()
         AND (
-            -- 管理者は自分のプロファイルを確認してroleをチェック
-            -- 無限再帰を避けるため、直接auth.uid()と比較
-            EXISTS (
-                SELECT 1 FROM public.lift_profiles p
-                WHERE p.id = auth.uid() AND p.role = 'admin'
-            )
+            -- 管理者チェック（メールアドレスで直接チェック、lift_profilesを参照しない）
+            public.is_lift_log_admin()
             OR id = auth.uid()
         )
     );
@@ -181,9 +188,10 @@ CREATE POLICY "lift_admins_can_view_all_personal_bests"
     ON public.lift_personal_bests FOR SELECT
     USING (
         public.is_lift_log_user()
-        AND EXISTS (
-            SELECT 1 FROM public.lift_profiles
-            WHERE id = auth.uid() AND role = 'admin'
+        AND (
+            -- 管理者チェック（メールアドレスで直接チェック、lift_profilesを参照しない）
+            public.is_lift_log_admin()
+            OR user_id = auth.uid()
         )
     );
 
@@ -221,11 +229,8 @@ CREATE POLICY "lift_admins_can_view_all_logs"
     USING (
         public.is_lift_log_user()
         AND (
-            -- 管理者チェック（無限再帰を避けるため、直接比較）
-            EXISTS (
-                SELECT 1 FROM public.lift_profiles p
-                WHERE p.id = auth.uid() AND p.role = 'admin'
-            )
+            -- 管理者チェック（メールアドレスで直接チェック、lift_profilesを参照しない）
+            public.is_lift_log_admin()
             OR user_id = auth.uid()
         )
     );
