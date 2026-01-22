@@ -25,6 +25,7 @@ import { Loader2, Plus, Trash2, X, Upload } from "lucide-react"
 import { saveWorkoutLog } from "@/lib/supabase/workouts"
 import { getExercisesByCategoryClient } from "@/lib/supabase/exercises-client"
 import { NutritionAnalysis } from "@/components/nutrition-analysis"
+import { getBodyPartFromExercise } from "@/lib/utils/exercise-utils"
 import type { WorkoutLogWithSets } from "@/lib/supabase/workouts"
 import type { Database } from "@/types/database"
 
