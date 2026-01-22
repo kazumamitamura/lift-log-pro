@@ -1,9 +1,10 @@
 -- ============================================
 -- Lift Log Pro - 種目マスタ Seedデータ
+-- テーブル名: lift_exercises
 -- ============================================
 
 -- ウエイトリフティング編（WL）
-INSERT INTO public.exercise_master (category_type, major_category, exercise_name, display_order) VALUES
+INSERT INTO public.lift_exercises (category_type, major_category, exercise_name, display_order) VALUES
 -- スナッチ系
 ('WL', 'Snatch系', 'S', 1),
 ('WL', 'Snatch系', 'HS', 2),

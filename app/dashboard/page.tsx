@@ -1,0 +1,182 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Calendar } from "@/components/calendar"
+import { WorkoutLogModal } from "@/components/workout-log-modal"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2, Plus, BarChart3, User } from "lucide-react"
+import Link from "next/link"
+import { getWorkoutLogsByDateRange, getWorkoutLogByDate } from "@/lib/supabase/workouts"
+import type { WorkoutLogWithSets } from "@/lib/supabase/workouts"
+import { format } from "date-fns"
+import { ja } from "date-fns/locale"
+
+export default function DashboardPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [user, setUser] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [workoutLogs, setWorkoutLogs] = useState<Map<string, WorkoutLogWithSets>>(new Map())
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedLog, setSelectedLog] = useState<WorkoutLogWithSets | null>(null)
+
+  // ユーザー認証チェック
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push("/login")
+        return
+      }
+
+      setUser(user)
+      setIsLoading(false)
+    }
+
+    checkUser()
+  }, [router])
+
+  // カレンダー範囲のログを取得
+  useEffect(() => {
+    const loadWorkoutLogs = async () => {
+      if (!user) return
+
+      const today = new Date()
+      const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+      const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+      const logs = await getWorkoutLogsByDateRange(
+        format(startDate, "yyyy-MM-dd"),
+        format(endDate, "yyyy-MM-dd")
+      )
+
+      const logsMap = new Map<string, WorkoutLogWithSets>()
+      logs.forEach((log) => {
+        logsMap.set(log.date, log)
+      })
+
+      setWorkoutLogs(logsMap)
+    }
+
+    loadWorkoutLogs()
+  }, [user])
+
+  // 日付選択時の処理
+  const handleDateSelect = async (date: Date | undefined) => {
+    if (!date) return
+
+    setSelectedDate(date)
+    const dateStr = format(date, "yyyy-MM-dd")
+
+    // 既にログがあるかチェック
+    const existingLog = workoutLogs.get(dateStr)
+    if (existingLog) {
+      setSelectedLog(existingLog)
+    } else {
+      // データベースから取得を試みる
+      const log = await getWorkoutLogByDate(dateStr)
+      if (log) {
+        setWorkoutLogs((prev) => {
+          const newMap = new Map(prev)
+          newMap.set(dateStr, log)
+          return newMap
+        })
+        setSelectedLog(log)
+      } else {
+        setSelectedLog(null)
+      }
+    }
+
+    setIsModalOpen(true)
+  }
+
+  // モーダルを閉じた後の処理
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setSelectedLog(null)
+    // ログを再取得
+    const today = new Date()
+    const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    getWorkoutLogsByDateRange(
+      format(startDate, "yyyy-MM-dd"),
+      format(endDate, "yyyy-MM-dd")
+    ).then((logs) => {
+      const logsMap = new Map<string, WorkoutLogWithSets>()
+      logs.forEach((log) => {
+        logsMap.set(log.date, log)
+      })
+      setWorkoutLogs(logsMap)
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto max-w-7xl p-4 py-8">
+      {/* ヘッダー */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">ダッシュボード</h1>
+          <p className="text-muted-foreground">
+            {format(new Date(), "yyyy年M月d日", { locale: ja })}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/pb">
+            <Button variant="outline" size="sm">
+              <User className="mr-2 h-4 w-4" />
+              自己ベスト
+            </Button>
+          </Link>
+          <Link href="/analysis">
+            <Button variant="outline" size="sm">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              分析
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* カレンダー */}
+      <Card>
+        <CardHeader>
+          <CardTitle>練習カレンダー</CardTitle>
+          <CardDescription>
+            日付をタップして練習記録を入力・編集できます
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Calendar
+            workoutLogs={workoutLogs}
+            onDateSelect={handleDateSelect}
+          />
+        </CardContent>
+      </Card>
+
+      {/* 記録入力モーダル */}
+      <WorkoutLogModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        selectedDate={selectedDate}
+        existingLog={selectedLog}
+      />
+    </div>
+  )
+}
