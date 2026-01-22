@@ -75,7 +75,8 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
             
             // 無効な日付のチェック
             if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-              return null
+              // nullの代わりに空のdivを返す（型エラーを回避）
+              return <div className="h-9 w-9" />
             }
             
             try {
@@ -107,7 +108,8 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               )
             } catch (error) {
               console.error("Error rendering day:", error, day)
-              return null
+              // エラー時も空のdivを返す（型エラーを回避）
+              return <div className="h-9 w-9" />
             }
           },
         }}
