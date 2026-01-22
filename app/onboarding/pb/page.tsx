@@ -60,7 +60,13 @@ export default function OnboardingPersonalBestPage() {
 
       if (data && !error) {
         setBodyWeight(data.body_weight?.toString() || "")
-        setRecords((data.records as Record<string, number>) || {})
+        // JSONBから数値を文字列に変換
+        const recordsObj = (data.records as Record<string, number>) || {}
+        const recordsStr: Record<string, string> = {}
+        Object.entries(recordsObj).forEach(([key, value]) => {
+          recordsStr[key] = value.toString()
+        })
+        setRecords(recordsStr)
       }
     }
 
