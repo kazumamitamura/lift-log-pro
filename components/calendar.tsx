@@ -88,39 +88,66 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
           <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
             <h3 className="text-sm font-semibold mb-3 text-foreground">練習記録一覧</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {Array.from(workoutLogs.entries())
-                .sort(([a], [b]) => b.localeCompare(a))
-                .slice(0, 10)
-                .map(([dateStr, log]) => {
-                  if (!log) return null
-                  try {
-                    const date = new Date(dateStr + "T00:00:00")
-                    if (isNaN(date.getTime())) return null
-                    const tonnage = log?.total_tonnage
-                    return (
-                      <div
-                        key={dateStr}
-                        className="flex justify-between items-center text-sm p-2 hover:bg-accent/50 rounded transition-colors cursor-pointer"
-                        onClick={() => {
-                          handleSelect(date)
-                          onDateSelect(date)
-                        }}
-                      >
-                        <span className="font-medium">
-                          {format(date, "yyyy年M月d日(E)", { locale: ja })}
-                        </span>
-                        {tonnage != null && tonnage > 0 && (
-                          <span className="font-bold text-primary px-2 py-1 bg-primary/10 rounded">
-                            {Math.round(tonnage)}kg
-                          </span>
-                        )}
-                      </div>
-                    )
-                  } catch (error) {
-                    console.error("Error rendering workout log item:", error)
-                    return null
-                  }
-                })}
+              {(() => {
+                try {
+                  const entries = Array.from(workoutLogs.entries())
+                  if (!entries || entries.length === 0) return null
+                  
+                  return entries
+                    .filter(([dateStr, log]) => dateStr && log)
+                    .sort(([a], [b]) => {
+                      try {
+                        return b.localeCompare(a)
+                      } catch {
+                        return 0
+                      }
+                    })
+                    .slice(0, 10)
+                    .map(([dateStr, log]) => {
+                      if (!log || !dateStr) return null
+                      try {
+                        const date = new Date(dateStr + "T00:00:00")
+                        if (isNaN(date.getTime())) return null
+                        const tonnage = log?.total_tonnage
+                        return (
+                          <div
+                            key={dateStr}
+                            className="flex justify-between items-center text-sm p-2 hover:bg-accent/50 rounded transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              try {
+                                handleSelect(date)
+                                onDateSelect(date)
+                              } catch (error) {
+                                console.error("Error selecting date from list:", error)
+                              }
+                            }}
+                          >
+                            <span className="font-medium">
+                              {format(date, "yyyy年M月d日(E)", { locale: ja })}
+                            </span>
+                            {tonnage != null && tonnage > 0 && (
+                              <span className="font-bold text-primary px-2 py-1 bg-primary/10 rounded">
+                                {Math.round(tonnage)}kg
+                              </span>
+                            )}
+                          </div>
+                        )
+                      } catch (error) {
+                        console.error("Error rendering workout log item:", error, dateStr, log)
+                        return null
+                      }
+                    })
+                } catch (error) {
+                  console.error("Error processing workout logs:", error)
+                  return (
+                    <div className="text-sm text-muted-foreground p-2">
+                      練習記録の読み込み中にエラーが発生しました
+                    </div>
+                  )
+                }
+              })()}
             </div>
           </div>
         )}

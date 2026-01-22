@@ -89,33 +89,35 @@ export default function DashboardPage() {
       return
     }
 
-    setSelectedDate(date)
-    const dateStr = format(date, "yyyy-MM-dd")
-
     try {
+      setSelectedDate(date)
+      const dateStr = format(date, "yyyy-MM-dd")
+
       // 既にログがあるかチェック
-      const existingLog = workoutLogs.get(dateStr)
+      const existingLog = workoutLogs && workoutLogs.has(dateStr) ? workoutLogs.get(dateStr) : null
       if (existingLog) {
         setSelectedLog(existingLog)
-      } else {
-        // データベースから取得を試みる
-        try {
-          const log = await getWorkoutLogByDate(dateStr)
-          if (log) {
-            setWorkoutLogs((prev) => {
-              const newMap = new Map(prev)
-              newMap.set(dateStr, log)
-              return newMap
-            })
-            setSelectedLog(log)
-          } else {
-            setSelectedLog(null)
-          }
-        } catch (fetchError) {
-          // データ取得エラーは無視して、新規作成として続行
-          console.warn("Error fetching workout log:", fetchError)
+        setIsModalOpen(true)
+        return
+      }
+
+      // データベースから取得を試みる
+      try {
+        const log = await getWorkoutLogByDate(dateStr)
+        if (log) {
+          setWorkoutLogs((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(dateStr, log)
+            return newMap
+          })
+          setSelectedLog(log)
+        } else {
           setSelectedLog(null)
         }
+      } catch (fetchError) {
+        // データ取得エラーは無視して、新規作成として続行
+        console.warn("Error fetching workout log:", fetchError)
+        setSelectedLog(null)
       }
 
       // モーダルを開く
