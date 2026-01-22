@@ -81,24 +81,76 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               }
               return <ChevronRight className="h-4 w-4" />
             },
-          }}
-          formatters={{
-            formatDay: (date) => {
-              const dateStr = format(date, "yyyy-MM-dd")
-              const log = workoutLogs.get(dateStr)
-              const dayNumber = format(date, "d")
-              
-              if (log && log.total_tonnage != null && log.total_tonnage > 0) {
+            Day: (props) => {
+              try {
+                // CalendarDayからDateを取得
+                const day = props.day as unknown as Date
+                
+                // 無効な日付のチェック
+                if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+                  return <div className="h-14 w-12 flex items-center justify-center" />
+                }
+                
+                const dateStr = format(day, "yyyy-MM-dd")
+                const log = workoutLogs.get(dateStr)
+                const isSelected =
+                  selected && format(selected, "yyyy-MM-dd") === dateStr
+                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
+                const tonnage = log?.total_tonnage
+
                 return (
-                  <div className="flex flex-col items-center justify-center gap-0.5">
-                    <span>{dayNumber}</span>
-                    <span className="text-[9px] font-bold leading-tight text-primary">
-                      {Math.round(log.total_tonnage)}kg
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-14 w-12 rounded-lg text-sm transition-all flex flex-col items-center justify-center gap-0.5 relative",
+                      "hover:shadow-md hover:scale-105 active:scale-95",
+                      isSelected && "bg-primary text-primary-foreground shadow-lg scale-105 font-bold",
+                      !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold",
+                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-semibold border border-primary/30",
+                      !isSelected && !isToday && !log && "hover:bg-accent"
+                    )}
+                    onClick={() => handleSelect(day)}
+                  >
+                    <span className={cn(
+                      "text-base",
+                      isSelected && "font-bold",
+                      isToday && !isSelected && "font-bold"
+                    )}>
+                      {format(day, "d")}
                     </span>
-                  </div>
+                    {tonnage != null && tonnage > 0 && (
+                      <span className={cn(
+                        "text-[9px] font-bold leading-tight px-1 py-0.5 rounded",
+                        isSelected 
+                          ? "bg-primary-foreground/20 text-primary-foreground" 
+                          : "bg-primary/80 text-primary-foreground"
+                      )}>
+                        {Math.round(tonnage)}kg
+                      </span>
+                    )}
+                  </button>
                 )
+              } catch (error) {
+                console.error("Error rendering day:", error, props.day)
+                // エラー時はデフォルトの日付表示を試みる
+                try {
+                  const day = props.day as unknown as Date
+                  if (day && day instanceof Date && !isNaN(day.getTime())) {
+                    return (
+                      <button
+                        type="button"
+                        className="h-14 w-12 rounded-lg text-sm flex items-center justify-center hover:bg-accent"
+                        onClick={() => handleSelect(day)}
+                      >
+                        {format(day, "d")}
+                      </button>
+                    )
+                  }
+                } catch {
+                  // フォールバック
+                }
+                return <div className="h-14 w-12 flex items-center justify-center" />
               }
-              return dayNumber
             },
           }}
         />
