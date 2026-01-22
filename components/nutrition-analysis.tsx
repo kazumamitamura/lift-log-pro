@@ -172,13 +172,14 @@ export function NutritionAnalysis({
       )}
 
       {/* プレビュー画像 */}
-      {previewImage && (
-        <div className="relative">
-          <img
-            src={previewImage}
-            alt="食事画像"
-            className="w-full h-48 object-cover rounded-md"
-          />
+          {previewImage && (
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewImage}
+                alt="食事画像"
+                className="w-full h-48 object-cover rounded-md"
+              />
           <Button
             type="button"
             variant="destructive"
@@ -224,7 +225,7 @@ export function NutritionAnalysis({
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name} ${((percent || 0) * 100).toFixed(0)}%`
                     }
                     outerRadius={80}
                     fill="#8884d8"
