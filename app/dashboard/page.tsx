@@ -50,25 +50,34 @@ export default function DashboardPage() {
     const loadWorkoutLogs = async () => {
       if (!user) return
 
-      const today = new Date()
-      const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-      const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      try {
+        const today = new Date()
+        const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
-      const logs = await getWorkoutLogsByDateRange(
-        format(startDate, "yyyy-MM-dd"),
-        format(endDate, "yyyy-MM-dd")
-      )
+        const logs = await getWorkoutLogsByDateRange(
+          format(startDate, "yyyy-MM-dd"),
+          format(endDate, "yyyy-MM-dd")
+        )
 
-      const logsMap = new Map<string, WorkoutLogWithSets>()
-      logs.forEach((log) => {
-        logsMap.set(log.date, log)
-      })
+        const logsMap = new Map<string, WorkoutLogWithSets>()
+        logs.forEach((log) => {
+          logsMap.set(log.date, log)
+        })
 
-      setWorkoutLogs(logsMap)
+        setWorkoutLogs(logsMap)
+      } catch (error) {
+        console.error("Error loading workout logs:", error)
+        toast({
+          variant: "destructive",
+          title: "エラー",
+          description: "練習ログの読み込みに失敗しました",
+        })
+      }
     }
 
     loadWorkoutLogs()
-  }, [user])
+  }, [user, toast])
 
   // 日付選択時の処理
   const handleDateSelect = async (date: Date | undefined) => {
@@ -77,26 +86,35 @@ export default function DashboardPage() {
     setSelectedDate(date)
     const dateStr = format(date, "yyyy-MM-dd")
 
-    // 既にログがあるかチェック
-    const existingLog = workoutLogs.get(dateStr)
-    if (existingLog) {
-      setSelectedLog(existingLog)
-    } else {
-      // データベースから取得を試みる
-      const log = await getWorkoutLogByDate(dateStr)
-      if (log) {
-        setWorkoutLogs((prev) => {
-          const newMap = new Map(prev)
-          newMap.set(dateStr, log)
-          return newMap
-        })
-        setSelectedLog(log)
+    try {
+      // 既にログがあるかチェック
+      const existingLog = workoutLogs.get(dateStr)
+      if (existingLog) {
+        setSelectedLog(existingLog)
       } else {
-        setSelectedLog(null)
+        // データベースから取得を試みる
+        const log = await getWorkoutLogByDate(dateStr)
+        if (log) {
+          setWorkoutLogs((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(dateStr, log)
+            return newMap
+          })
+          setSelectedLog(log)
+        } else {
+          setSelectedLog(null)
+        }
       }
-    }
 
-    setIsModalOpen(true)
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error("Error selecting date:", error)
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: "日付の選択に失敗しました",
+      })
+    }
   }
 
   // モーダルを閉じた後の処理
@@ -111,13 +129,22 @@ export default function DashboardPage() {
     getWorkoutLogsByDateRange(
       format(startDate, "yyyy-MM-dd"),
       format(endDate, "yyyy-MM-dd")
-    ).then((logs) => {
-      const logsMap = new Map<string, WorkoutLogWithSets>()
-      logs.forEach((log) => {
-        logsMap.set(log.date, log)
+    )
+      .then((logs) => {
+        const logsMap = new Map<string, WorkoutLogWithSets>()
+        logs.forEach((log) => {
+          logsMap.set(log.date, log)
+        })
+        setWorkoutLogs(logsMap)
       })
-      setWorkoutLogs(logsMap)
-    })
+      .catch((error) => {
+        console.error("Error reloading workout logs:", error)
+        toast({
+          variant: "destructive",
+          title: "エラー",
+          description: "練習ログの再読み込みに失敗しました",
+        })
+      })
   }
 
   if (isLoading) {

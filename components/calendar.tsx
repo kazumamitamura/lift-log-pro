@@ -91,7 +91,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                 onClick={() => handleSelect(day)}
               >
                 <span>{format(day, "d")}</span>
-                {log && (
+                {log && log.total_tonnage != null && (
                   <span className="text-[10px] font-bold text-primary leading-none">
                     {Math.round(log.total_tonnage)}
                   </span>
