@@ -7,6 +7,7 @@ import { ja } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { WorkoutLogWithSets } from "@/lib/supabase/workouts"
+import type { DayProps } from "react-day-picker"
 import "react-day-picker/dist/style.css"
 
 interface CalendarProps {
@@ -20,6 +21,71 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
   const handleSelect = (date: Date | undefined) => {
     setSelected(date)
     onDateSelect(date)
+  }
+
+  // カスタムDayコンポーネント
+  function CustomDay(props: DayProps) {
+    const { day, modifiers, ...rest } = props
+    
+    // dayをDateに変換
+    let date: Date | null = null
+    try {
+      if (day instanceof Date) {
+        date = day
+      } else if (typeof day === "string") {
+        date = new Date(day)
+      } else if (day && typeof day === "object" && "getTime" in day) {
+        date = day as Date
+      }
+      
+      if (!date || isNaN(date.getTime())) {
+        return <div className="h-20 w-16" />
+      }
+    } catch {
+      return <div className="h-20 w-16" />
+    }
+
+    const dateStr = format(date, "yyyy-MM-dd")
+    const log = workoutLogs.get(dateStr)
+    const isSelected = selected && format(selected, "yyyy-MM-dd") === dateStr
+    const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
+    const tonnage = log?.total_tonnage
+    const hasWorkout = modifiers?.hasWorkout || false
+
+    return (
+      <button
+        type="button"
+        {...rest}
+        className={cn(
+          "h-20 w-16 rounded-xl text-sm transition-all flex flex-col items-center justify-center gap-1 relative",
+          "hover:shadow-lg hover:scale-110 active:scale-105",
+          isSelected && "bg-primary text-primary-foreground shadow-xl scale-110 font-bold ring-2 ring-primary ring-offset-2",
+          !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold shadow-md",
+          !isSelected && !isToday && hasWorkout && "bg-primary/20 hover:bg-primary/30 font-bold border-2 border-primary/60 shadow-md",
+          !isSelected && !isToday && !hasWorkout && "hover:bg-accent/50"
+        )}
+        onClick={() => handleSelect(date)}
+      >
+        <span className={cn(
+          "text-lg leading-none font-bold",
+          isSelected && "text-primary-foreground",
+          isToday && !isSelected && "text-accent-foreground",
+          hasWorkout && !isSelected && !isToday && "text-primary"
+        )}>
+          {format(date, "d")}
+        </span>
+        {tonnage != null && tonnage > 0 && (
+          <span className={cn(
+            "text-[10px] font-extrabold leading-tight px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-sm",
+            isSelected 
+              ? "bg-primary-foreground/30 text-primary-foreground border border-primary-foreground/50" 
+              : "bg-primary text-primary-foreground border border-primary/80"
+          )}>
+            {Math.round(tonnage)}kg
+          </span>
+        )}
+      </button>
+    )
   }
 
   return (
@@ -81,78 +147,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
               }
               return <ChevronRight className="h-5 w-5" />
             },
-            Day: (props) => {
-              try {
-                // CalendarDayからDateを取得
-                const day = props.day as unknown as Date
-                
-                // 無効な日付のチェック
-                if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-                  return <div className="h-20 w-16 flex items-center justify-center" />
-                }
-                
-                const dateStr = format(day, "yyyy-MM-dd")
-                const log = workoutLogs.get(dateStr)
-                const isSelected =
-                  selected && format(selected, "yyyy-MM-dd") === dateStr
-                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
-                const tonnage = log?.total_tonnage
-
-                return (
-                  <button
-                    type="button"
-                    className={cn(
-                      "h-20 w-16 rounded-xl text-sm transition-all flex flex-col items-center justify-center gap-1 relative",
-                      "hover:shadow-lg hover:scale-110 active:scale-105",
-                      isSelected && "bg-primary text-primary-foreground shadow-xl scale-110 font-bold ring-2 ring-primary ring-offset-2",
-                      !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold shadow-md",
-                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-bold border-2 border-primary/60 shadow-md",
-                      !isSelected && !isToday && !log && "hover:bg-accent/50"
-                    )}
-                    onClick={() => handleSelect(day)}
-                  >
-                    <span className={cn(
-                      "text-lg leading-none font-bold",
-                      isSelected && "text-primary-foreground",
-                      isToday && !isSelected && "text-accent-foreground",
-                      log && !isSelected && !isToday && "text-primary"
-                    )}>
-                      {format(day, "d")}
-                    </span>
-                    {tonnage != null && tonnage > 0 && (
-                      <span className={cn(
-                        "text-[10px] font-extrabold leading-tight px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-sm",
-                        isSelected 
-                          ? "bg-primary-foreground/30 text-primary-foreground border border-primary-foreground/50" 
-                          : "bg-primary text-primary-foreground border border-primary/80"
-                      )}>
-                        {Math.round(tonnage)}kg
-                      </span>
-                    )}
-                  </button>
-                )
-              } catch (error) {
-                console.error("Error rendering day:", error, props.day)
-                // エラー時はデフォルトの日付表示を試みる
-                try {
-                  const day = props.day as unknown as Date
-                  if (day && day instanceof Date && !isNaN(day.getTime())) {
-                    return (
-                      <button
-                        type="button"
-                        className="h-20 w-16 rounded-xl text-sm flex items-center justify-center hover:bg-accent font-semibold transition-all hover:scale-110"
-                        onClick={() => handleSelect(day)}
-                      >
-                        {format(day, "d")}
-                      </button>
-                    )
-                  }
-                } catch {
-                  // フォールバック
-                }
-                return <div className="h-20 w-16 flex items-center justify-center" />
-              }
-            },
+            Day: CustomDay,
           }}
         />
       </div>
