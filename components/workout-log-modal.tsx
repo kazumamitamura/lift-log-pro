@@ -175,11 +175,12 @@ export function WorkoutLogModal({
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
     }
-    if (selectedCategory && exercise.category_type !== selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all" && exercise.category_type !== selectedCategory) {
       return false
     }
     if (
       selectedMajorCategory &&
+      selectedMajorCategory !== "all" &&
       exercise.major_category !== selectedMajorCategory
     ) {
       return false
@@ -348,7 +349,7 @@ export function WorkoutLogModal({
                   <SelectValue placeholder="編を選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">すべて</SelectItem>
+                  <SelectItem value="all">すべて</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat === "WL" ? "ウエイトリフティング" : "筋トレ"}
@@ -368,7 +369,7 @@ export function WorkoutLogModal({
                     <SelectValue placeholder="大カテゴリを選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">すべて</SelectItem>
+                    <SelectItem value="all">すべて</SelectItem>
                     {majorCategories.map((major) => (
                       <SelectItem key={major} value={major}>
                         {major}
@@ -423,7 +424,7 @@ export function WorkoutLogModal({
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-exercise" disabled>
                               種目が見つかりません
                             </SelectItem>
                           )}

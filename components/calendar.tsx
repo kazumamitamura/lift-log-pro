@@ -24,36 +24,36 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-5xl">
         <DayPicker
           mode="single"
           selected={selected}
           onSelect={handleSelect}
           locale={ja}
-          className="rounded-lg border bg-card p-6 shadow-sm"
+          className="rounded-xl border-2 border-border bg-gradient-to-br from-card to-card/50 p-6 shadow-lg"
           classNames={{
             months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
             month: "space-y-4 w-full",
-            caption: "flex justify-center pt-1 relative items-center mb-4",
-            caption_label: "text-xl font-bold text-foreground",
+            caption: "flex justify-center pt-1 relative items-center mb-6",
+            caption_label: "text-2xl font-bold text-foreground",
             nav: "space-x-1 flex items-center",
             nav_button: cn(
-              "h-9 w-9 bg-background border border-input rounded-md p-0 opacity-70 hover:opacity-100 hover:bg-accent transition-all flex items-center justify-center"
+              "h-10 w-10 bg-background border-2 border-input rounded-lg p-0 opacity-80 hover:opacity-100 hover:bg-accent hover:border-primary transition-all flex items-center justify-center shadow-sm"
             ),
             nav_button_previous: "absolute left-1",
             nav_button_next: "absolute right-1",
             table: "w-full border-collapse mt-4",
-            head_row: "flex mb-2",
+            head_row: "flex mb-3",
             head_cell:
-              "text-muted-foreground rounded-md w-14 font-semibold text-sm text-center",
+              "text-muted-foreground rounded-md w-16 font-bold text-sm text-center",
             row: "flex w-full mt-2",
-            cell: "h-16 w-14 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+            cell: "h-20 w-16 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
             day: cn(
-              "h-16 w-14 p-0 font-medium text-base rounded-lg transition-all hover:scale-105 relative"
+              "h-20 w-16 p-0 font-semibold text-base rounded-xl transition-all hover:scale-110 relative group"
             ),
             day_selected:
-              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-md scale-105 font-bold",
-            day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary",
+              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-xl scale-110 font-bold ring-2 ring-primary ring-offset-2",
+            day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary shadow-md",
             day_outside:
               "day-outside text-muted-foreground opacity-40 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
             day_disabled: "text-muted-foreground opacity-30",
@@ -72,44 +72,89 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
             },
           }}
           modifiersClassNames={{
-            hasWorkout: "bg-primary/30 border-2 border-primary/50 font-semibold",
+            hasWorkout: "bg-primary/20 border-2 border-primary/60 font-bold shadow-md",
           }}
           components={{
             Chevron: ({ orientation }) => {
               if (orientation === "left") {
-                return <ChevronLeft className="h-4 w-4" />
+                return <ChevronLeft className="h-5 w-5" />
               }
-              return <ChevronRight className="h-4 w-4" />
+              return <ChevronRight className="h-5 w-5" />
+            },
+            Day: (props) => {
+              try {
+                // CalendarDayからDateを取得
+                const day = props.day as unknown as Date
+                
+                // 無効な日付のチェック
+                if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+                  return <div className="h-20 w-16 flex items-center justify-center" />
+                }
+                
+                const dateStr = format(day, "yyyy-MM-dd")
+                const log = workoutLogs.get(dateStr)
+                const isSelected =
+                  selected && format(selected, "yyyy-MM-dd") === dateStr
+                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr
+                const tonnage = log?.total_tonnage
+
+                return (
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-20 w-16 rounded-xl text-sm transition-all flex flex-col items-center justify-center gap-1 relative",
+                      "hover:shadow-lg hover:scale-110 active:scale-105",
+                      isSelected && "bg-primary text-primary-foreground shadow-xl scale-110 font-bold ring-2 ring-primary ring-offset-2",
+                      !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold shadow-md",
+                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-bold border-2 border-primary/60 shadow-md",
+                      !isSelected && !isToday && !log && "hover:bg-accent/50"
+                    )}
+                    onClick={() => handleSelect(day)}
+                  >
+                    <span className={cn(
+                      "text-lg leading-none font-bold",
+                      isSelected && "text-primary-foreground",
+                      isToday && !isSelected && "text-accent-foreground",
+                      log && !isSelected && !isToday && "text-primary"
+                    )}>
+                      {format(day, "d")}
+                    </span>
+                    {tonnage != null && tonnage > 0 && (
+                      <span className={cn(
+                        "text-[10px] font-extrabold leading-tight px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-sm",
+                        isSelected 
+                          ? "bg-primary-foreground/30 text-primary-foreground border border-primary-foreground/50" 
+                          : "bg-primary text-primary-foreground border border-primary/80"
+                      )}>
+                        {Math.round(tonnage)}kg
+                      </span>
+                    )}
+                  </button>
+                )
+              } catch (error) {
+                console.error("Error rendering day:", error, props.day)
+                // エラー時はデフォルトの日付表示を試みる
+                try {
+                  const day = props.day as unknown as Date
+                  if (day && day instanceof Date && !isNaN(day.getTime())) {
+                    return (
+                      <button
+                        type="button"
+                        className="h-20 w-16 rounded-xl text-sm flex items-center justify-center hover:bg-accent font-semibold transition-all hover:scale-110"
+                        onClick={() => handleSelect(day)}
+                      >
+                        {format(day, "d")}
+                      </button>
+                    )
+                  }
+                } catch {
+                  // フォールバック
+                }
+                return <div className="h-20 w-16 flex items-center justify-center" />
+              }
             },
           }}
         />
-        {/* 練習日の総重量を表示するリスト */}
-        {workoutLogs.size > 0 && (
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-            <h3 className="text-sm font-semibold mb-2">練習記録</h3>
-            <div className="space-y-1">
-              {Array.from(workoutLogs.entries())
-                .slice(0, 5)
-                .map(([dateStr, log]) => {
-                  const date = new Date(dateStr)
-                  const tonnage = log?.total_tonnage
-                  return (
-                    <div
-                      key={dateStr}
-                      className="flex justify-between items-center text-sm"
-                    >
-                      <span>{format(date, "yyyy年M月d日")}</span>
-                      {tonnage != null && tonnage > 0 && (
-                        <span className="font-bold text-primary">
-                          {Math.round(tonnage)}kg
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
