@@ -30,29 +30,29 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
           selected={selected}
           onSelect={handleSelect}
           locale={ja}
-          className="rounded-lg border bg-card p-4 shadow-sm"
+          className="rounded-lg border bg-card p-6 shadow-sm"
           classNames={{
             months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
             month: "space-y-4 w-full",
             caption: "flex justify-center pt-1 relative items-center mb-4",
-            caption_label: "text-lg font-bold text-foreground",
+            caption_label: "text-xl font-bold text-foreground",
             nav: "space-x-1 flex items-center",
             nav_button: cn(
-              "h-8 w-8 bg-background border border-input rounded-md p-0 opacity-70 hover:opacity-100 hover:bg-accent transition-all"
+              "h-9 w-9 bg-background border border-input rounded-md p-0 opacity-70 hover:opacity-100 hover:bg-accent transition-all flex items-center justify-center"
             ),
             nav_button_previous: "absolute left-1",
             nav_button_next: "absolute right-1",
-            table: "w-full border-collapse space-y-1",
+            table: "w-full border-collapse mt-4",
             head_row: "flex mb-2",
             head_cell:
-              "text-muted-foreground rounded-md w-12 font-semibold text-sm text-center",
-            row: "flex w-full mt-1",
-            cell: "h-14 w-12 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+              "text-muted-foreground rounded-md w-14 font-semibold text-sm text-center",
+            row: "flex w-full mt-2",
+            cell: "h-16 w-14 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
             day: cn(
-              "h-14 w-12 p-0 font-medium text-base rounded-lg transition-all hover:scale-105"
+              "h-16 w-14 p-0 font-medium text-base rounded-lg transition-all hover:scale-105 relative"
             ),
             day_selected:
-              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-md scale-105",
+              "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-md scale-105 font-bold",
             day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary",
             day_outside:
               "day-outside text-muted-foreground opacity-40 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
@@ -72,7 +72,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
             },
           }}
           modifiersClassNames={{
-            hasWorkout: "bg-primary/30 border border-primary/50 font-semibold",
+            hasWorkout: "bg-primary/30 border-2 border-primary/50 font-semibold",
           }}
           components={{
             Chevron: ({ orientation }) => {
@@ -88,7 +88,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                 
                 // 無効な日付のチェック
                 if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-                  return <div className="h-14 w-12 flex items-center justify-center" />
+                  return <div className="h-16 w-14 flex items-center justify-center" />
                 }
                 
                 const dateStr = format(day, "yyyy-MM-dd")
@@ -102,17 +102,17 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                   <button
                     type="button"
                     className={cn(
-                      "h-14 w-12 rounded-lg text-sm transition-all flex flex-col items-center justify-center gap-0.5 relative",
+                      "h-16 w-14 rounded-lg text-sm transition-all flex flex-col items-center justify-center gap-0.5 relative",
                       "hover:shadow-md hover:scale-105 active:scale-95",
                       isSelected && "bg-primary text-primary-foreground shadow-lg scale-105 font-bold",
                       !isSelected && isToday && "bg-accent text-accent-foreground border-2 border-primary font-bold",
-                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-semibold border border-primary/30",
+                      !isSelected && !isToday && log && "bg-primary/20 hover:bg-primary/30 font-semibold border-2 border-primary/30",
                       !isSelected && !isToday && !log && "hover:bg-accent"
                     )}
                     onClick={() => handleSelect(day)}
                   >
                     <span className={cn(
-                      "text-base",
+                      "text-base leading-none",
                       isSelected && "font-bold",
                       isToday && !isSelected && "font-bold"
                     )}>
@@ -120,10 +120,10 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                     </span>
                     {tonnage != null && tonnage > 0 && (
                       <span className={cn(
-                        "text-[9px] font-bold leading-tight px-1 py-0.5 rounded",
+                        "text-[10px] font-bold leading-tight px-1 py-0.5 rounded whitespace-nowrap",
                         isSelected 
                           ? "bg-primary-foreground/20 text-primary-foreground" 
-                          : "bg-primary/80 text-primary-foreground"
+                          : "bg-primary text-primary-foreground"
                       )}>
                         {Math.round(tonnage)}kg
                       </span>
@@ -139,7 +139,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                     return (
                       <button
                         type="button"
-                        className="h-14 w-12 rounded-lg text-sm flex items-center justify-center hover:bg-accent"
+                        className="h-16 w-14 rounded-lg text-sm flex items-center justify-center hover:bg-accent font-medium"
                         onClick={() => handleSelect(day)}
                       >
                         {format(day, "d")}
@@ -149,7 +149,7 @@ export function Calendar({ workoutLogs, onDateSelect }: CalendarProps) {
                 } catch {
                   // フォールバック
                 }
-                return <div className="h-14 w-12 flex items-center justify-center" />
+                return <div className="h-16 w-14 flex items-center justify-center" />
               }
             },
           }}
