@@ -149,11 +149,6 @@ export function WorkoutLogModal({
             updated.target_body_part = getBodyPartFromExercise(value)
           }
 
-          // 種目が変更された場合、部位を自動判定
-          if (field === "exercise_name" && value) {
-            updated.target_body_part = getBodyPartFromExercise(value)
-          }
-
           // 重量、回数、セット数が全て入力されている場合、トンネージを計算
           if (
             field === "weight" ||
